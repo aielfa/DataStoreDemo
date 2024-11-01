@@ -24,26 +24,42 @@ class UserPreferencesRepository(
         const val TAG = "UserPreferencesRepo"
     }
 
+    // Flow to get the layout preference
     val isLinearLayout: Flow<Boolean> = dataStore.data
-        .catch {
-            if (it is IOException) {
-                Log.e(TAG, "Error reading preferences.", it)
+        .catch { exception ->
+            if (exception is IOException) {
+                Log.e(TAG, "Error reading layout preferences.", exception)
                 emit(emptyPreferences())
             } else {
-                throw it
+                throw exception
             }
         }
         .map { preferences ->
             preferences[IS_LINEAR_LAYOUT] ?: true
         }
 
+    // Theme
+        val isDarkTheme: Flow<Boolean> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) {
+                Log.e(TAG, "Error reading theme preferences.", exception)
+                emit(emptyPreferences())
+            } else {
+                throw exception
+            }
+        }
+        .map { preferences ->
+            preferences[IS_DARK_THEME] ?: false // The app starts in light theme
+        }
 
+    // Save layout
     suspend fun saveLayoutPreference(isLinearLayout: Boolean) {
         dataStore.edit { preferences ->
             preferences[IS_LINEAR_LAYOUT] = isLinearLayout
         }
     }
 
+    // Save theme
     suspend fun saveThemePreference(isDarkTheme: Boolean) {
         dataStore.edit { preferences ->
             preferences[IS_DARK_THEME] = isDarkTheme

@@ -1,6 +1,7 @@
 package edu.farmingdale.datastoredemo.ui
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -8,12 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,12 +34,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.farmingdale.datastoredemo.R
-
 import edu.farmingdale.datastoredemo.data.local.LocalEmojiData
 
 /*
@@ -56,6 +52,8 @@ fun EmojiReleaseApp(
     EmojiScreen(
         uiState = emojiViewModel.uiState.collectAsState().value,
         selectLayout = emojiViewModel::selectLayout,
+        // Pass the theme from viewmodel
+        selectTheme = emojiViewModel::selectTheme
     )
 }
 
@@ -63,7 +61,8 @@ fun EmojiReleaseApp(
 @Composable
 private fun EmojiScreen(
     uiState: EmojiReleaseUiState,
-    selectLayout: (Boolean) -> Unit
+    selectLayout: (Boolean) -> Unit,
+    selectTheme: (Boolean) -> Unit // Toggle Theme
 ) {
     val isLinearLayout = uiState.isLinearLayout
     Scaffold(
@@ -82,8 +81,14 @@ private fun EmojiScreen(
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
-
-
+                    // Switch to switch to Dark Mode
+                    Switch(
+                        checked = uiState.isDarkTheme,
+                        onCheckedChange = { selectTheme(!uiState.isDarkTheme) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
                 },
                 colors = TopAppBarDefaults.largeTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.inversePrimary
@@ -116,11 +121,13 @@ fun EmojiReleaseLinearLayout(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
-    val cntxt = LocalContext.current
-    LazyColumn(
+    val context = LocalContext.current // Pull current state and context
+    LazyVerticalGrid(
         modifier = modifier,
+        columns = GridCells.Fixed(3), // Set the number of columns
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_small))
     ) {
         items(
             items = LocalEmojiData.EmojiList,
@@ -130,17 +137,19 @@ fun EmojiReleaseLinearLayout(
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
-                shape = MaterialTheme.shapes.medium
+                modifier = Modifier.clickable {
+                    // Show toast when clicked
+                    Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
+                }
             ) {
-                    Text(
-                        text = e, fontSize = 50.sp,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(dimensionResource(R.dimen.padding_medium)),
-                        textAlign = TextAlign.Center
-                    )
-
-
+                Text(
+                    text = e,
+                    fontSize = 50.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(dimensionResource(R.dimen.padding_medium)),
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
@@ -151,6 +160,7 @@ fun EmojiReleaseGridLayout(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
+    val context = LocalContext.current
     LazyVerticalGrid(
         modifier = modifier,
         columns = GridCells.Fixed(3),
@@ -166,11 +176,17 @@ fun EmojiReleaseGridLayout(
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
-                modifier = Modifier.height(110.dp),
+                modifier = Modifier
+                    .height(110.dp)
+                    .clickable {
+                        // Show toast
+                        Toast.makeText(context, "$e", Toast.LENGTH_SHORT).show()
+                    },
                 shape = MaterialTheme.shapes.medium
             ) {
                 Text(
-                    text = e, fontSize = 50.sp,
+                    text = e,
+                    fontSize = 50.sp,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier

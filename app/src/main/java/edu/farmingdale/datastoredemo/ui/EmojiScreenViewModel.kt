@@ -11,6 +11,7 @@ import edu.farmingdale.datastoredemo.EmojiReleaseApplication
 import edu.farmingdale.datastoredemo.data.local.UserPreferencesRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -21,8 +22,12 @@ class EmojiScreenViewModel(
 ) : ViewModel() {
     // UI states access for various
     val uiState: StateFlow<EmojiReleaseUiState> =
-        userPreferencesRepository.isLinearLayout.map { isLinearLayout ->
-            EmojiReleaseUiState(isLinearLayout)
+        //Somthing I found that combines both layouts
+        combine(
+            userPreferencesRepository.isLinearLayout,
+            userPreferencesRepository.isDarkTheme
+        ) { isLinearLayout, isDarkTheme ->
+            EmojiReleaseUiState(isLinearLayout, isDarkTheme)
         }.stateIn(
             scope = viewModelScope,
             // Flow is set to emits value for when app is on the foreground
@@ -42,7 +47,11 @@ class EmojiScreenViewModel(
         }
     }
 
-
+    fun selectTheme(isDarkTheme: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.saveThemePreference(isDarkTheme)
+        }
+    }
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
@@ -58,6 +67,7 @@ class EmojiScreenViewModel(
  */
 data class EmojiReleaseUiState(
     val isLinearLayout: Boolean = true,
+    val isDarkTheme: Boolean = false, // Theme state property
     val toggleContentDescription: Int =
         if (isLinearLayout) R.string.grid_layout_toggle else R.string.linear_layout_toggle,
     val toggleIcon: Int =

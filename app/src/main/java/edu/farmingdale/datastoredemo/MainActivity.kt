@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import edu.farmingdale.datastoredemo.ui.EmojiReleaseApp
@@ -18,8 +19,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            DataStoreDemoTheme {
-                    EmojiReleaseApp()
+            val userPreferencesRepository = (application as EmojiReleaseApplication).userPreferencesRepository
+            val isDarkTheme = userPreferencesRepository.isDarkTheme.collectAsState(initial = false).value
+
+            DataStoreDemoTheme(darkTheme = isDarkTheme) {
+                EmojiReleaseApp()
             }
         }
     }
